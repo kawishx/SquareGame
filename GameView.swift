@@ -14,6 +14,10 @@ struct GameView: View {
     @State private var selectedTiles: [Int] = []
     @State private var score = 0
     @State private var highScore = UserDefaults.standard.integer(forKey: "HighScore")
+    @State private var timeRemaining = 0
+    @State private var timer: Timer?
+    @State private var showWinPopup = false
+    @State private var confetti = false
     
     let columns = [GridItem(.adaptive(minimum: 80))]
     
@@ -26,6 +30,7 @@ struct GameView: View {
                 // Score Card
                 HStack {
                     ScoreCard(title: "Score", value: score)
+                    ScoreCard(title: "Time", value: timeRemaining)
                     ScoreCard(title: "High", value: highScore)
                 }
                 .padding(.horizontal)
@@ -43,6 +48,20 @@ struct GameView: View {
                 
                 Spacer()
             }
+            if confetti {
+                    ConfettiView()
+                }
+                
+                if showWinPopup {
+                    WinPopupView(
+                        score: score,
+                        timeBonus: timeRemaining * 2
+                    ) {
+                        showWinPopup = false
+                        confetti = false
+                        startGame()
+                    }
+                }
         }
         .navigationTitle("Color Match")
         .navigationBarTitleDisplayMode(.inline)
@@ -61,6 +80,9 @@ struct GameView: View {
         
         score = 0
         selectedTiles = []
+        
+        timeRemaining = level.timeLimit
+        startTimer()
     }
     
     func tileTapped(_ index: Int) {
@@ -87,6 +109,7 @@ struct GameView: View {
                 }
                 
                 score += 10
+                checkWin()
                 
                 if score > highScore {
                     highScore = score
@@ -100,5 +123,36 @@ struct GameView: View {
             selectedTiles.removeAll()
         }
     }
+    
+    func startTimer() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if timeRemaining > 0 {
+                timeRemaining -= 1
+            } else {
+                timer?.invalidate()
+            }
+        }
+    }
+
+    func checkWin() {
+        if tiles.allSatisfy({ $0.isMatched }) {
+            timer?.invalidate()
+            
+            let bonus = timeRemaining * 2
+            score += bonus
+            
+            if score > highScore {
+                highScore = score
+                UserDefaults.standard.set(highScore, forKey: "HighScore")
+            }
+            
+            withAnimation {
+                showWinPopup = true
+                confetti = true
+            }
+        }
+    }
+
 }
 

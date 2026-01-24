@@ -5,7 +5,6 @@
 //  Created by cobsccomp242p-013 on 2026-01-17.
 //
 import SwiftUI
-
 struct ScoreCard: View {
     
     let title: String

@@ -14,5 +14,12 @@ enum GameLevel {
         case .hard: return 8
         }
     }
+    
+    var timeLimit: Int {
+        switch self {
+        case .easy: return 60
+        case .medium: return 45
+        case .hard: return 30
+        }
+    }
 }
-
